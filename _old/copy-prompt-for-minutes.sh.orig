@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Copy prompt for minutes
+# @raycast.mode fullOutput
+
+# Optional parameters:
+# @raycast.icon 📔
+# @raycast.argument1 { "type": "dropdown", "placeholder": "Language", "required": true, "data": [ { "title": "日本語", "value": "ja" }, { "title": "英語", "value": "en" }] }
+
+# Documentation:
+# @raycast.description Copy the prompt stored in a local md file for creating a minute into the clipboard
+
+# 環境変数LANGを設定
+export LANG=ja_JP.UTF-8
+
+# 変数にmdファイルのパスを格納
+md_file_path="/Users/hnishim/Documents/Prompts/NotebookLM_create-minutes.md"
+
+# 引数に応じて変換前の文字列と変換後の文字列を設定
+before_string="日本語 英語"
+if [ "$1" = "en" ]; then
+  after_string="英語"
+else
+  after_string="日本語"
+
+# ファイルの内容をpbcopyにパイプしてクリップボードにコピー
+cat "$md_file_path" | sed "s/$before_string/$after_string/g" | pbcopy
+
+# ペーストを実行 (macOS)
+osascript -e '
+  tell application "System Events"
+    keystroke "v" using command down
+  end tell
+'
