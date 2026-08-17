@@ -10,11 +10,32 @@
 
 set -euo pipefail
 
+# RaycastのScript CommandにはTTYがないため、sudoのパスワード入力を行えない。
+# 非rootで起動された場合は、macOSの管理者権限ダイアログでこのスクリプト全体を
+# rootとして1回だけ再実行する。これにより、状態確認ごとの追加認証を避ける。
+SCRIPT_PATH="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+if [ "$(id -u)" -ne 0 ]; then
+    exec /usr/bin/osascript - "$SCRIPT_PATH" <<'APPLESCRIPT'
+on run argv
+    set scriptPath to quoted form of (item 1 of argv)
+    do shell script ("/bin/bash " & scriptPath) with administrator privileges
+end run
+APPLESCRIPT
+fi
+
+if [ -x "/opt/homebrew/bin/nextdns" ]; then
+    NEXTDNS_BIN="/opt/homebrew/bin/nextdns"
+elif [ -x "/usr/local/bin/nextdns" ]; then
+    NEXTDNS_BIN="/usr/local/bin/nextdns"
+else
+    NEXTDNS_BIN=""
+fi
+
 # NextDNS開始スクリプト
 # NextDNSが起動してない場合には起動させる、起動している場合は再起動
 
 ensure_nextdns_exists() {
-    if command -v nextdns >/dev/null 2>&1; then
+    if [ -n "$NEXTDNS_BIN" ]; then
         return 0
     else
         echo "[ERROR] NextDNSがインストールされていません" >&2
@@ -25,7 +46,7 @@ ensure_nextdns_exists() {
 # 現在の状態を返す: running | stopped | unknown
 get_nextdns_state() {
     local out
-    if ! out=$(sudo nextdns status 2>&1); then
+    if ! out=$("$NEXTDNS_BIN" status 2>&1); then
         echo "unknown"
         return 0
     fi
@@ -43,13 +64,13 @@ get_nextdns_state() {
 reconcile_nextdns() {
     case "$(get_nextdns_state)" in
         running)
-            sudo nextdns restart >/dev/null 2>&1 || {
+            "$NEXTDNS_BIN" restart >/dev/null 2>&1 || {
                 echo "[ERROR] NextDNSの再起動に失敗しました" >&2
                 return 1
             }
             ;;
         stopped)
-            sudo nextdns start >/dev/null 2>&1 || {
+            "$NEXTDNS_BIN" start >/dev/null 2>&1 || {
                 echo "[ERROR] NextDNSの起動に失敗しました" >&2
                 return 1
             }
