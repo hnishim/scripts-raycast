@@ -32,21 +32,22 @@ on run argv
 	set screenRight to visibleLeft + visibleWidth
 	set screenBottom to mainHeight - visibleBottom
 	set middleX to screenLeft + (visibleWidth div 2)
+	set desktopFolder to POSIX file ((current application's NSHomeDirectory() as text) & "/Desktop")
 
 	tell application "Finder"
 		-- ??????2?????Desktop??????
-		repeat while (count of Finder windows) < 2
-			set newWindow to make new Finder window
-			set target of newWindow to (path to desktop folder)
+		repeat while (count of windows) < 2
+			set newWindow to make new window
+			set target of newWindow to desktopFolder
 		end repeat
 
 		-- ???2??????????????
-		repeat while (count of Finder windows) > 2
-			close Finder window 3
+		repeat while (count of windows) > 2
+			close window 3
 		end repeat
 
-		set leftWindow to Finder window 1
-		set rightWindow to Finder window 2
+		set leftWindow to window 1
+		set rightWindow to window 2
 
 		-- ?????????????
 		set bounds of leftWindow to {screenLeft, screenTop, middleX, screenBottom}
