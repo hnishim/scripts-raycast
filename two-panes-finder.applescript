@@ -151,6 +151,7 @@ on run argv
 		-- ?????????????
 		set bounds of window id (contents of leftID) to leftBounds
 		set bounds of window id (contents of rightID) to rightBounds
+		activate
 
 	end tell
 end run

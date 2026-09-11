@@ -111,7 +111,9 @@ on run argv
 	my assertSourceNotContains(productionExecutableSource, "tell application \"System Events\"", "System Events dependency is excluded")
 	my assertSourceNotContains(productionExecutableSource, "processReady", "C process readiness probe is excluded")
 	my assertSourceNotContains(productionExecutableSource, "keystroke \"n\" using {command down}", "Cmd-N is not the primary generation path")
-	my assertSourceNotContains(productionExecutableSource, "activate", "terminal Finder frontmost activation is excluded")
+	my assertSourceContains(productionExecutableSource, "activate", "terminal Finder foreground transition")
+	my assertSourceOrder(productionExecutableSource, "set bounds of window id (contents of leftID) to leftBounds", "activate", "Finder foreground transition follows left pane bounds assignment")
+	my assertSourceOrder(productionExecutableSource, "set bounds of window id (contents of rightID) to rightBounds", "activate", "Finder foreground transition follows final bounds assignment")
 	my assertSourceNotContains(productionExecutableSource, "set target of window id", "post-create target mutation is excluded")
 	my assertSourceNotContains(productionExecutableSource, "repeat with candidateWindow in every window", "candidate window loop reference is not used")
 	my assertSourceNotContains(productionExecutableSource, "contents of candidateWindow", "candidate window contents are not used as Finder objects")
@@ -248,6 +250,6 @@ end run
 -- 	my assertEqualList({}, my twoPaneFinderNewWindowIDs({101, 102}, {101, 102}), "no new window IDs")
 -- 	my assertEqualList({201, 202}, my twoPaneFinderNewWindowIDs({}, {201, 202}), "all current IDs are new")
 --
--- 	return "PASS: two-panes-finder handler contract (60 assertions; no Finder window side effects)"
+-- 	return "PASS: two-panes-finder handler contract (61 assertions; no Finder window side effects)"
 -- end run
 -- END FIXTURE RUNNER
