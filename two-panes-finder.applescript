@@ -89,23 +89,8 @@ on twoPaneFinderCloseWindowIDs(existingWindowIDs)
 	return closeWindowIDs
 end twoPaneFinderCloseWindowIDs
 
-on twoPaneFinderOpenNewWindowByMenu()
-	tell application "System Events"
-		tell process "Finder"
-			click menu item "New Finder Window" of menu "File" of menu bar 1
-		end tell
-	end tell
-end twoPaneFinderOpenNewWindowByMenu
-
 on run argv
 	tell application "Finder" to launch
-	set processReady to false
-	repeat 20 times
-		tell application "System Events" to tell process "Finder" to set processReady to exists
-		if processReady then exit repeat
-		delay 0.1
-	end repeat
-	if not processReady then error "Finder process did not become ready"
 
 	-- ???????Dock????????????????
 	set mainScreen to current application's NSScreen's mainScreen()
@@ -133,35 +118,21 @@ on run argv
 	set paneBounds to my twoPaneFinderBoundsForVisibleFrame(visibleFrame, desktopHeight)
 	set leftBounds to item 1 of paneBounds
 	set rightBounds to item 2 of paneBounds
-	set desktopFolder to POSIX file ((current application's NSHomeDirectory() as text) & "/Desktop")
 
 	tell application "Finder"
 		set existingWindowIDs to id of every window
 		set existingWindowCount to count of existingWindowIDs
 		set windowPlan to my twoPaneFinderWindowPlan(existingWindowCount)
 		set createCount to item 1 of windowPlan
-		set finalWindowCount to existingWindowCount + createCount
 		set newWindowIDs to {}
 
-		-- C: use Finder's menu action, then identify only the generated windows by ID.
 		if createCount > 0 then
 			repeat with creationIndex from 1 to createCount
-			my twoPaneFinderOpenNewWindowByMenu()
-			repeat 20 times
+				make new Finder window to desktop
 				set currentWindowIDs to id of every window
 				set newWindowIDs to my twoPaneFinderNewWindowIDs(existingWindowIDs, currentWindowIDs)
-				if (count of newWindowIDs) ≥ creationIndex then exit repeat
-				delay 0.1
 			end repeat
-		end repeat
-		if (count of windows) < finalWindowCount then error "Finder menu action did not reach the expected count"
-		set currentWindowIDs to id of every window
-		set newWindowIDs to my twoPaneFinderNewWindowIDs(existingWindowIDs, currentWindowIDs)
-		if (count of newWindowIDs) is not createCount then error "Finder window ID diff does not match create count"
-		repeat with newWindowID in newWindowIDs
-		set newWindowIDValue to contents of newWindowID
-		set target of window id newWindowIDValue to desktopFolder
-		end repeat
+			if (count of newWindowIDs) is not createCount then error "Finder window ID diff does not match create count"
 		end if
 		if (count of windows) < 2 then error "Unable to open a second Finder window"
 
@@ -181,6 +152,5 @@ on run argv
 		set bounds of window id (contents of leftID) to leftBounds
 		set bounds of window id (contents of rightID) to rightBounds
 
-		activate
 	end tell
 end run

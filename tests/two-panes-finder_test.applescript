@@ -88,17 +88,11 @@ on run argv
 
 	-- The Finder-facing generation contract is intentionally static here: the
 	-- fixture below must remain Finder-free, while the production source must
-	-- use Finder's menu action and integer ID state.
-	my assertSourceContains(productionSource, "tell application \"Finder\" to launch", "Finder launch before window planning")
-	my assertSourceContains(productionSource, "set processReady to false", "Finder process readiness state")
-	my assertSourceContains(productionSource, "tell application \"System Events\" to tell process \"Finder\" to set processReady to exists", "Finder process readiness probe")
-	my assertSourceContains(productionSource, "if processReady then exit repeat", "Finder process readiness gate")
-	my assertSourceContains(productionSource, "on twoPaneFinderOpenNewWindowByMenu()", "C menu generation handler")
-	my assertSourceContains(productionExecutableSource, "click menu item \"New Finder Window\" of menu \"File\" of menu bar 1", "C menu generation path")
+	-- use Finder's direct make action and integer ID state.
+	my assertSourceContains(productionExecutableSource, "make new Finder window to desktop", "direct Finder window generation path")
 	my assertSourceContains(productionSource, "twoPaneFinderNewWindowIDs", "new Finder window ID separation")
 	my assertSourceContains(productionSource, "set newWindowIDs to my twoPaneFinderNewWindowIDs(existingWindowIDs, currentWindowIDs)", "new window IDs are derived before targeting")
 	my assertSourceContains(productionSource, "twoPaneFinderCloseWindowIDs", "existing window close IDs are derived from the snapshot")
-	my assertSourceContains(productionExecutableSource, "set target of window id newWindowIDValue to desktopFolder", "only new window IDs receive the Desktop target")
 	my assertSourceContains(productionExecutableSource, "set paneWindowIDs to existingWindowIDs & newWindowIDs", "pane state uses existing and new integer IDs")
 	my assertSourceContains(productionExecutableSource, "close window id (contents of closeWindowID)", "only snapshotted excess IDs are closed")
 	my assertSourceContains(productionExecutableSource, "set bounds of window id (contents of leftID) to leftBounds", "left pane is re-resolved by integer ID")
@@ -107,15 +101,18 @@ on run argv
 	my assertSourceContains(productionExecutableSource, "set closeWindowIDs to my twoPaneFinderCloseWindowIDs(existingWindowIDs)", "excess IDs are computed before closing")
 	my assertSourceContains(productionExecutableSource, "set leftID to item 1 of existingWindowIDs", "first snapshotted existing ID is reused on the left")
 	my assertSourceContains(productionExecutableSource, "set rightID to item 2 of existingWindowIDs", "second snapshotted existing ID is reused on the right")
-	my assertSourceOrder(productionSource, "tell application \"Finder\" to launch", "set existingWindowIDs to id of every window", "Finder launch precedes existing window snapshot")
-	my assertSourceOrder(productionExecutableSource, "if processReady then exit repeat", "my twoPaneFinderOpenNewWindowByMenu()", "readiness precedes menu generation")
-	my assertSourceOrder(productionExecutableSource, "set newWindowIDs to my twoPaneFinderNewWindowIDs(existingWindowIDs, currentWindowIDs)", "set target of window id newWindowIDValue to desktopFolder", "new window ID extraction precedes target assignment")
+	my assertSourceOrder(productionExecutableSource, "make new Finder window to desktop", "set newWindowIDs to my twoPaneFinderNewWindowIDs(existingWindowIDs, currentWindowIDs)", "direct make precedes new ID readback")
 	my assertSourceOrder(productionExecutableSource, "set closeWindowIDs to my twoPaneFinderCloseWindowIDs(existingWindowIDs)", "close window id (contents of closeWindowID)", "close IDs are computed before closing")
 	my assertSourceOrder(productionExecutableSource, "close window id (contents of closeWindowID)", "set leftID to item 1 of existingWindowIDs", "excess close precedes existing ID reuse")
 	my assertSourceOrder(productionExecutableSource, "set leftID to item 1 of existingWindowIDs", "set bounds of window id (contents of leftID) to leftBounds", "left ID precedes left bounds assignment")
 	my assertSourceOrder(productionExecutableSource, "set rightID to item 2 of existingWindowIDs", "set bounds of window id (contents of rightID) to rightBounds", "right ID precedes right bounds assignment")
-	my assertSourceNotContains(productionExecutableSource, "make new Finder window", "native direct Finder generation is excluded")
+	my assertSourceNotContains(productionExecutableSource, "on twoPaneFinderOpenNewWindowByMenu()", "C menu generation handler is excluded")
+	my assertSourceNotContains(productionExecutableSource, "click menu item \"New Finder Window\" of menu \"File\" of menu bar 1", "C menu generation path is excluded")
+	my assertSourceNotContains(productionExecutableSource, "tell application \"System Events\"", "System Events dependency is excluded")
+	my assertSourceNotContains(productionExecutableSource, "processReady", "C process readiness probe is excluded")
 	my assertSourceNotContains(productionExecutableSource, "keystroke \"n\" using {command down}", "Cmd-N is not the primary generation path")
+	my assertSourceNotContains(productionExecutableSource, "activate", "terminal Finder frontmost activation is excluded")
+	my assertSourceNotContains(productionExecutableSource, "set target of window id", "post-create target mutation is excluded")
 	my assertSourceNotContains(productionExecutableSource, "repeat with candidateWindow in every window", "candidate window loop reference is not used")
 	my assertSourceNotContains(productionExecutableSource, "contents of candidateWindow", "candidate window contents are not used as Finder objects")
 	my assertSourceNotContains(productionExecutableSource, "set target of window 1 to desktopFolder", "existing window 1 is not directly targeted")
@@ -251,6 +248,6 @@ end run
 -- 	my assertEqualList({}, my twoPaneFinderNewWindowIDs({101, 102}, {101, 102}), "no new window IDs")
 -- 	my assertEqualList({201, 202}, my twoPaneFinderNewWindowIDs({}, {201, 202}), "all current IDs are new")
 --
--- 	return "PASS: two-panes-finder handler contract (49 assertions; no Finder window side effects)"
+-- 	return "PASS: two-panes-finder handler contract (60 assertions; no Finder window side effects)"
 -- end run
 -- END FIXTURE RUNNER
