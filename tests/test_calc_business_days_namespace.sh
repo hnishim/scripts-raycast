@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
 REPO_ROOT=$(cd -- "$SCRIPT_DIR/.." && pwd)
 CALC_DIR="$REPO_ROOT/calcBusinessDays"
-EXPECTED_NAMESPACE='my.calendar.business-days'
+EXPECTED_NAMESPACE='my.script.calc-business-days'
 LEGACY_NAMESPACE='com.hnishim.calc-business-days'
 
 python3 - "$CALC_DIR/setup.sh" "$CALC_DIR/run.sh" "$CALC_DIR/README.md" <<'PY'
@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 setup, run, readme = (Path(p) for p in sys.argv[1:])
-expected = "my.calendar.business-days"
+expected = "my.script.calc-business-days"
 legacy = "com.hnishim.calc-business-days"
 
 for path in (setup, run, readme):
