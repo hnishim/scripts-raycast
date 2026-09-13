@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# @tuna.name Cal
+# @tuna.subtitle Nヶ月先までのカレンダーを表示
+# @tuna.icon symbol:calendar
+# @tuna.mode inline
+# @tuna.input arguments
+# @tuna.output text
+
 # Required parameters:
 # @raycast.schemaVersion 1
 # @raycast.title Cal
